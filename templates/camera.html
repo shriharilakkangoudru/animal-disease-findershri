@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Animal Disease Finder</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f9;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #198754;
+            color: white;
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #146c43;
+        }
+
+        #preview {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: none;
+            margin: 15px 0;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+        }
+
+        #result {
+            display: none;
+        }
+
+        .animal-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .info {
+            background: #f1f8f4;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .disease {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 10px;
+        }
+
+        .error {
+            background: #f8d7da;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+        }
+
+        @media(max-width:600px) {
+
+            .animal-info {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>🐾 Animal Disease Finder</h1>
+
+        <p>
+            Take a photo and let AI identify the animal
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📷 Animal Camera</h2>
+
+        <input
+            type="file"
+            id="image"
+            accept="image/*"
+            capture="environment"
+        >
+
+        <img
+            id="preview"
+            alt="Animal preview"
+        >
+
+        <button onclick="scanAnimal()">
+            🔍 Detect Animal
+        </button>
+
+        <div id="loading">
+            🤖 AI is analyzing the image...
+        </div>
+
+        <div id="error"></div>
+
+    </div>
+
+
+    <div id="result">
+
+        <div class="card">
+
+            <h2>🐾 Animal Detected</h2>
+
+            <div class="animal-info">
+
+                <div class="info">
+
+                    <h3 id="animal"></h3>
+
+                    <p>Animal</p>
+
+                </div>
+
+
+                <div class="info">
+
+                    <h3 id="confidence"></h3>
+
+                    <p>AI Confidence</p>
+
+                </div>
+
+
+                <div class="info">
+
+                    <h3 id="breed"></h3>
+
+                    <p>Breed</p>
+
+                </div>
+
+            </div>
+
+            <p>
+                <strong>Age:</strong>
+                <span id="age"></span>
+            </p>
+
+            <p id="description"></p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>🦠 Disease Information</h2>
+
+            <div id="diseases"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            ⚠️ Disease information shown here is for
+            educational/reference purposes. A veterinarian
+            should diagnose and treat animals.
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const imageInput =
+    document.getElementById("image");
+
+const preview =
+    document.getElementById("preview");
+
+
+/* --------------------------------
+   Preview photo
+-------------------------------- */
+
+imageInput.addEventListener(
+    "change",
+    function() {
+
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        preview.src =
+            URL.createObjectURL(file);
+
+        preview.style.display = "block";
+
+    }
+);
+
+
+/* --------------------------------
+   Scan animal
+-------------------------------- */
+
+async function scanAnimal() {
+
+    const file =
+        imageInput.files[0];
+
+    const loading =
+        document.getElementById("loading");
+
+    const error =
+        document.getElementById("error");
+
+    const result =
+        document.getElementById("result");
+
+
+    if (!file) {
+
+        error.className = "error";
+
+        error.textContent =
+            "Please take or select an animal photo.";
+
+        return;
+    }
+
+
+    error.textContent = "";
+
+    error.className = "";
+
+    result.style.display = "none";
+
+    loading.style.display = "block";
+
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "image",
+        file
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/scan",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        loading.style.display = "none";
+
+
+        if (!data.success) {
+
+            error.className = "error";
+
+            error.textContent =
+                data.message;
+
+            return;
+        }
+
+
+        /* ---------------------------
+           Show animal
+        --------------------------- */
+
+        document.getElementById(
+            "animal"
+        ).textContent =
+            data.animal;
+
+
+        document.getElementById(
+            "confidence"
+        ).textContent =
+            data.confidence + "%";
+
+
+        document.getElementById(
+            "breed"
+        ).textContent =
+            data.breed;
+
+
+        document.getElementById(
+            "age"
+        ).textContent =
+            data.age;
+
+
+        document.getElementById(
+            "description"
+        ).textContent =
+            data.animal_description;
+
+
+        /* ---------------------------
+           Diseases
+        --------------------------- */
+
+        const diseases =
+            document.getElementById(
+                "diseases"
+            );
+
+        diseases.innerHTML = "";
+
+
+        data.diseases.forEach(
+            function(disease) {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+                div.className =
+                    "disease";
+
+
+                let symptoms = "";
+
+                disease.symptoms.forEach(
+                    function(symptom) {
+
+                        symptoms +=
+                            "<li>" +
+                            symptom +
+                            "</li>";
+
+                    }
+                );
+
+
+                div.innerHTML = `
+
+                    <h3>
+                        🦠 ${disease.name}
+                    </h3>
+
+                    <p>
+                        <strong>Description:</strong>
+                        ${disease.description}
+                    </p>
+
+                    <strong>Symptoms:</strong>
+
+                    <ul>
+                        ${symptoms}
+                    </ul>
+
+                    <p>
+                        <strong>Prevention:</strong>
+                        ${disease.prevention}
+                    </p>
+
+                    <p>
+                        <strong>Action:</strong>
+                        ${disease.action}
+                    </p>
+
+                `;
+
+
+                diseases.appendChild(div);
+
+            }
+        );
+
+
+        /* ---------------------------
+           Show result
+        --------------------------- */
+
+        result.style.display =
+            "block";
+
+
+        result.scrollIntoView({
+            behavior: "smooth"
+        });
+
+
+    } catch (err) {
+
+        loading.style.display = "none";
+
+        error.className = "error";
+
+        error.textContent =
+            "Error connecting to Flask: " +
+            err.message;
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>

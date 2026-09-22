@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Disease Results</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>🐾 Disease Results</h1>
+
+        <p>
+            Animal:
+            <strong>{{ animal }}</strong>
+        </p>
+
+    </div>
+
+
+    {% if results %}
+
+        {% for result in results %}
+
+        <div class="result-card">
+
+            <h2>
+                {{ result.disease.disease }}
+            </h2>
+
+            <div class="match">
+
+                Symptom Match:
+                <strong>
+                    {{ result.percentage }}%
+                </strong>
+
+            </div>
+
+
+            <h3>Matching Symptoms</h3>
+
+            <ul>
+
+                {% for symptom in result.matched_symptoms %}
+
+                <li>
+                    {{ symptom }}
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+
+            <h3>Description</h3>
+
+            <p>
+                {{ result.disease.description }}
+            </p>
+
+
+            <h3>Prevention</h3>
+
+            <p>
+                {{ result.disease.prevention }}
+            </p>
+
+
+            <h3>Recommended Action</h3>
+
+            <p>
+                {{ result.disease.action }}
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="card">
+
+            <h2>No matching disease found</h2>
+
+            <p>
+                No disease in the current database matched
+                the symptoms you entered.
+            </p>
+
+            <p>
+                Please consult a veterinarian for a proper diagnosis.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+    <a href="/" class="back-button">
+        ← Search Again
+    </a>
+
+</div>
+
+</body>
+</html>

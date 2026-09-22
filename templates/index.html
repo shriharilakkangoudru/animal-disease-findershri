@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Animal Disease Finder</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🐾 Animal Disease Finder</h1>
+        <p>Enter the animal and its symptoms to find possible diseases.</p>
+    </div>
+
+    <div class="card">
+
+        <form action="/find" method="POST">
+
+            <label for="animal">
+                Select Animal
+            </label>
+
+            <select name="animal" id="animal" required>
+
+                <option value="">
+                    -- Select Animal --
+                </option>
+
+                {% for animal in animals %}
+
+                <option value="{{ animal }}">
+                    {{ animal }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <label for="symptoms">
+                Enter Symptoms
+            </label>
+
+            <textarea
+                id="symptoms"
+                name="symptoms"
+                placeholder="Example: fever, coughing, loss of appetite"
+                required
+            ></textarea>
+
+            <p class="help">
+                Enter multiple symptoms separated by commas.
+            </p>
+
+
+            <button type="submit">
+                🔍 Find Disease
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+<button onclick="sendBarcode()">
+    Test Barcode
+</button>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<a href="/camera" class="back-button">
+    📷 Scan Animal Using Camera
+</a>
